@@ -24,22 +24,22 @@ export class BoardDisplay {
 		this.container = new PIXI.Container();
 	}
 
-	updateMode() {
+	getMode() {
 		if (this.boards.length > 48) {
-			this.mode = DisplayMode.GALLERY;
+			return DisplayMode.GALLERY;
 		} else if (this.boards.length > 24) {
-			this.mode = DisplayMode.TWOSIDES;
+			return DisplayMode.TWOSIDES;
 		} else if (this.boards.length > 1) {
-			this.mode = DisplayMode.ONESIDE;
+			return DisplayMode.ONESIDE;
 		} else {
-			this.mode = DisplayMode.DUEL;
+			return DisplayMode.DUEL;
 		}
 	}
 
 	addBoard(board: Board) {
 		this.boards.push(board);
 		this.container.addChild(board.container);
-		this.updateMode();
+		this.mode = this.getMode();
 		this.arrangeBoards();
 	}
 
@@ -48,11 +48,14 @@ export class BoardDisplay {
 			if (this.boards[i] === board) {
 				this.boards[i].transform.y = this.boards[i].transform.y + 50;
 				this.boards[i].dead = true;
+				this.boards[i].stopSim();
 				this.boards.splice(i, 1);
-				if (this.mode !== DisplayMode.GALLERY && this.boards.length < 49) {
-					this.updateMode();
+
+				if (!(this.getMode() == DisplayMode.GALLERY && DisplayMode.GALLERY == this.mode)) {
+					this.mode = this.getMode();
 					this.arrangeBoards();
 				}
+
 				return;
 			}
 		}
@@ -70,7 +73,7 @@ export class BoardDisplay {
 		let margin = 5;
 		switch (this.mode) {
 			case DisplayMode.GALLERY:
-				margin = 50;
+				margin = 70;
 				bounds.height = appHeight * 0.8;
 				scaleFactor = (appHeight / 4 - 2 * margin) / (boxHeight);
 				bounds.y = appHeight / 2 - boxHeight * scaleFactor * 2 - margin;

@@ -4,7 +4,7 @@ body {
 	align-items: center;
 	height: 100vh;
 	margin: 0;
-	background-color: rgb(32,28,28);
+	background-image: url(https://nypost.com/wp-content/uploads/sites/2/2024/03/iStock-531782050.jpg?quality=75&strip=all&w=1024);
 	background-size: cover;
 }
 
@@ -32,4 +32,17 @@ canvas#debug {
 
 canvas#render {
 	height: 100%;
+	width: 170vh;
+	z-index: 100;
+}
+
+.overlay {
+    z-index: 1;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    overflow: auto;
+    top: 0px;
+    left: 0px;
+    background: rgba(0, 0, 0, 0.7);
 }

@@ -34,7 +34,7 @@ export class Board {
 		fontFamily: 'Arial',
 		fill: '#ffffff',
 		stroke: { color: '0x111111', width: 12, join: 'round' },
-		fontSize: 60,
+		fontSize: 45,
 		fontWeight: 'lighter',
 	});
 
@@ -42,21 +42,30 @@ export class Board {
 		if (!this.container) { return; }
 		let board = new PIXI.Graphics();
 		
-		board.stroke({ width: 2, color: 0xffffff});
+		board.stroke({ width: 20, color: 0xffffff});
 		board.lineTo(0, boxHeight);
 		board.lineTo(boxWidth, boxHeight);
 		board.lineTo(boxWidth, 0);
 		board.stroke();
 
-		const 
 		
-		nameplate = new PIXI.Text({
+		board.fillStyle = {
+			color: 0x000000,
+			alpha: 0.9*255
+		};
+
+		board.fill();
+
+		let nameplate = new PIXI.Text({
 			text: this.connection ? this.connection.username : "undefined",
 			style: this.textStyle,
 		});
 
 		nameplate.position.x = boxWidth/2-nameplate.width/2;
-		nameplate.position.y = boxHeight;
+		nameplate.position.y = boxHeight * 1.025;
+
+		board.rect(0, nameplate.position.y , boxWidth,  nameplate.height * 1);
+		board.fill();
 
 		this.container.addChild(board);
 		this.container.addChild(nameplate);
@@ -111,8 +120,8 @@ export class Board {
 			isStatic: true
 		};
 
-		const leftWall = Bodies.rectangle(-thickness/2, boxHeight/2 + thickness/2, thickness, boxHeight, options);
-		const rightWall = Bodies.rectangle(boxWidth + thickness/2, boxHeight/2 + thickness/2, thickness, boxHeight, options);
+		const leftWall = Bodies.rectangle(-thickness/2, boxHeight/2 + thickness/2, thickness, boxHeight + thickness, options);
+		const rightWall = Bodies.rectangle(boxWidth + thickness/2, boxHeight/2 + thickness/2, thickness, boxHeight + thickness, options);
 		const floor = Bodies.rectangle(boxWidth/2, boxHeight + thickness/2, boxWidth + thickness, thickness, options);
 		const box = Body.create({
 			parts: [leftWall, rightWall, floor],
@@ -129,20 +138,19 @@ export class Board {
 	}
 
 	startSim() {
-		if (!this.runner || !this.engine || this.physicsRunning) { return ;}
-		console.log("started sim");
+		if (!this.runner || !this.engine || this.physicsRunning) { return; }
 		this.physicsRunning = true;
 		Runner.run(this.runner, this.engine);
 	}
 	
 	stopSim() {
-		console.log("stopped sim");
+		if (!this.runner || !this.engine || this.physicsRunning) { return; }
 		this.physicsRunning = false;
 		Runner.stop(this.runner);
 	}
 
 	spawnFruit() {
-		this.fruits.push(Fruit.create(Math.floor(Math.random() * Object.keys(FruitType).length), this, 15 + Math.floor(Math.random() * boxWidth - 15), 0));
+		this.fruits.push(Fruit.create(Math.floor(Math.random() * 5), this, 50 + Math.floor(Math.random() * boxWidth - 50), 0));
 	}
 
 	drawFruits() {
@@ -166,14 +174,23 @@ export class Board {
 			this.container.scale.set(lerp(this.container.scale._x, this.transform.scale, 0.25));
 
 			if (this.dead) {
-				this.container.alpha = lerp(this.container.alpha, 0, 0.15);
+				this.container.alpha = lerp(this.container.alpha, 0, 0.5);
+				if (this.container.alpha <= 0.1) {
+					this.container.visible = false;
+				}
 			}
 
 			if (this.boardDisplay.mode == DisplayMode.GALLERY) {
 				if (this.transform.rowIndex % 2 == 0) {
-					this.transform.x += 1.5 * dt;
+					this.transform.x += 0.5 * dt;
 				} else {
-					this.transform.x -= 1.5 * dt;
+					this.transform.x -= 0.5 * dt;
+				}
+
+				if (this.container.position.y > appHeight / 2) {
+					this.container.position.y += 5*Math.cos((2*Math.PI)/appWidth * this.container.position.x);
+				} else {
+					this.container.position.y -= 5*Math.cos((2*Math.PI)/appWidth * this.container.position.x);
 				}
 
 				if (this.container.position.x > appWidth + Math.floor(this.boardDisplay.boards.length / 4) * this.container.width - this.container.width*4.5) {

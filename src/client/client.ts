@@ -96,7 +96,7 @@ const connections: Map<string, [Connection, Board]> = new Map();
 		});
 	});
 
-	setInterval(() => { sync(true) }, 3000);
+	setInterval(() => { if (document.hasFocus()) {sync(true);} }, 3000);
 
 	function sync(volatile?: boolean) {
 		let update: Update = {
