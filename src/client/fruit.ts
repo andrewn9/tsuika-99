@@ -38,6 +38,7 @@ export class Fruit {
 		let fruit = this.create(def.type, board, def.position.x, def.position.y, def.angle);
 		
 		if (def.physics) {
+			Body.update(fruit.body, 16.666, 1, 0);
 			for (const key in def.physics) {
 				Body.set(fruit.body, key, def.physics[key]);
 			}
@@ -84,6 +85,7 @@ export class Fruit {
 		this.properties.physics = {
 			velocity: this.body.velocity,
 			angularVelocity: this.body.angularVelocity
+			
 		};
 
 		return JSON.stringify(this.properties);

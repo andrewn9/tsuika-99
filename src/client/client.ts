@@ -5,6 +5,7 @@ import { appHeight, appWidth, boxHeight, boxWidth, lerp } from "./config";
 import { Board } from "./board";
 import { Connection } from "../server/rooms";
 import { Update } from "../server/game";
+import { Events } from "matter-js";
 
 const room = new URLSearchParams(window.location.search).get("room");
 let username = sessionStorage.getItem("username");
@@ -52,6 +53,10 @@ const connections: Map<string, [Connection, Board]> = new Map();
 				myBoard.initEngine();
 				myBoard.startSim();
 				connections.set(myConnection.id, [myConnection, myBoard]);
+
+				Events.on(myBoard.engine, "collisionEnd", () => {
+					// sync(true);
+				});
 			}
 		}
 	});
@@ -127,13 +132,9 @@ const connections: Map<string, [Connection, Board]> = new Map();
 	
 	window.addEventListener("keydown", (e) => {
 		switch (e.key.toUpperCase()) {
-			case "A":
-				let board = new Board(displayBoard);
-				other_boards.push(board);
-				displayBoard.addBoard(board);
-				break;
 			case "C":
 				myBoard.spawnFruit();
+				sync(true);
 				break;
 			case "S":
 				sync(true);
@@ -142,6 +143,7 @@ const connections: Map<string, [Connection, Board]> = new Map();
 				for (let i = 0; i < Math.random() * 100; i++) {
 					myBoard.spawnFruit();
 				}
+				sync(true);
 				break;
 			case "V":
 				for (let connection in connections) {
@@ -171,8 +173,11 @@ const connections: Map<string, [Connection, Board]> = new Map();
 				// 	console.log("too old, skipping")
 				// 	break;
 				// }
-				board.clear();
-				board.loadBoard(update.event.data);
+				if (update.timestamp > board.lastUpdate) {
+					board.clear();
+					board.loadBoard(update.event.data);
+					board.lastUpdate = update.timestamp;
+				}
 				// console.log("handling update");
 			}
 		}
@@ -180,7 +185,7 @@ const connections: Map<string, [Connection, Board]> = new Map();
 	};
 
 	socket.on("update", (update: Update) => {
-		updates.push(update);
+		updates = [update, ...updates];
 	});
 	
 	setInterval(() => { 
