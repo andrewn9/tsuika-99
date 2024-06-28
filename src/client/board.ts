@@ -22,6 +22,7 @@ export class Board {
 	nameplate: PIXI.Text;
 	boardDisplay: BoardDisplay;
 	id: number;
+	lastUpdate: number = 0;
 
 	transform: {
 		x: number;
