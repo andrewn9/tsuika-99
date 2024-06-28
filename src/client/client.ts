@@ -29,50 +29,47 @@ const connections: Map<string, [Connection, Board]> = new Map();
 
 	let other_boards: Board[] = [];
 
-
 	let myBoard: Board;
 	let myConnection: Connection;
-	socket.on("connectionAdded", (data: Connection[]) => {
-		for (let connection of data) {
-			if (!connections.get(connection.id)) {
-				console.log("connectionid" + connection.id);
 
-				if (connection.id === socket.id) {
-					myBoard = new Board(displayBoard, LevelOfDetail.PHYSICS_WITH_HUD, true);
-					myBoard.connection = connection;
-
-					myBoard.focused = true;
-					myBoard.client = true;
-
-					myBoard.transform = {x: appWidth/2 - boxWidth/2, y: appHeight/2 - boxHeight/2, scale: 1};
-					app.stage.addChild(myBoard.container);
-
-					myBoard.initBoard();
-					myBoard.initEngine();
-					myBoard.startSim();
-					connections.set(connection.id, [connection, myBoard]);
-				} else {
-					let board = new Board(displayBoard);
-					other_boards.push(board);
-					displayBoard.addBoard(board);
-
-					board.connection = connection;
-					board.id = connection.num;
-
-					board.initBoard();
-					connections.set(connection.id, [connection, board]);
-				}
+	let incomingConnections: Connection[] = [];
+	socket.on("connectionAdded", (data: Connection) => {
+		if (data.id !== socket.id && !connections.has(data.id)) {
+			incomingConnections.push(data);
+		} else {
+			myConnection = data;
+			if (!myConnection)
+				window.location.href = "/index.html";
+		
+			if (!myBoard) {
+				myBoard = new Board(displayBoard, LevelOfDetail.PHYSICS_WITH_HUD, true);
+				myBoard.connection = myConnection;
+				myBoard.focused = true;
+				myBoard.client = true;
+				myBoard.transform = {x: appWidth/2 - boxWidth/2, y: appHeight/2 - boxHeight/2, scale: 1};
+				app.stage.addChild(myBoard.container);
+				myBoard.initBoard();
+				myBoard.initEngine();
+				myBoard.startSim();
+				connections.set(myConnection.id, [myConnection, myBoard]);
 			}
 		}
-		if (!myBoard) {
-			window.location.href = "/index.html";
-		}
-		myConnection = myBoard.connection
-		sync();
 	});
 
+	function addPlayer(connection: Connection) {
+		if (!connections.get(connection.id)) {
+			let board = new Board(displayBoard);
+			other_boards.push(board);
+			displayBoard.addBoard(board);
 
-	
+			board.connection = connection;
+			board.id = connection.num;
+
+			board.initBoard();
+			connections.set(connection.id, [connection, board]);
+		}
+	}
+
 	socket.on("connectionRemoved", (data: Connection[]) => {
 		const removedConnections = [];
 		for (const [connectionId, connectionTuple] of connections.entries()) {
@@ -87,6 +84,21 @@ const connections: Map<string, [Connection, Board]> = new Map();
 		});
 	});
 
+	socket.on("playerList", (data: Connection[]) => {
+		data.forEach(connection => {
+			if (connection.id !== socket.id && !connections.has(connection.id)) {
+				let found = false;
+				incomingConnections.forEach(v => {
+					if (v.id == connection.id) {
+						found = true;
+					}
+				});
+				if (!found) {
+					incomingConnections.push(connection);
+				}
+			}
+		});
+	});
 
 	app.ticker.add((time) => {
 		if (myBoard)
@@ -96,15 +108,14 @@ const connections: Map<string, [Connection, Board]> = new Map();
 		});
 	});
 
-	setInterval(() => { if (document.hasFocus()) {sync(true);} }, 3000);
-
 	function sync(volatile?: boolean) {
 		let update: Update = {
 			sender: myConnection.id,
 			event: {
 				type: "updateOthers",
 				data: myBoard.exportBoard()
-			}
+			},
+			timestamp: Date.now()
 		};
 		if (volatile) {
 			socket.volatile.emit("update", [room, update]);
@@ -132,19 +143,54 @@ const connections: Map<string, [Connection, Board]> = new Map();
 					myBoard.spawnFruit();
 				}
 				break;
+			case "V":
+				for (let connection in connections) {
+					console.log(connections[connection]);
+				}
+				break;
 		}
 	});
 
+	let updates: Update[] = [];
 
-	socket.on("update", (update: Update) => {
+	function handleEvents() {
+		if (updates.length == 0) return;
+
+		let update = updates.at(0);
+
 		let board = connections.get(update.sender)[1];
+		if (!connections.get(update.sender)) {
+			console.log("couldn't find board?");
+			return;
+		}
+
+		let now = Date.now();
 		switch (update.event.type) {
 			case "updateOthers": {
+				// if (now - 5000 > update.timestamp) {
+				// 	console.log("too old, skipping")
+				// 	break;
+				// }
 				board.clear();
 				board.loadBoard(update.event.data);
+				// console.log("handling update");
 			}
 		}
+		updates.splice(0, 1);
+	};
+
+	socket.on("update", (update: Update) => {
+		updates.push(update);
 	});
+	
+	setInterval(() => { 
+		if (document.hasFocus()) {
+			if (incomingConnections.length > 0) {
+				addPlayer(incomingConnections.at(0));
+				incomingConnections.splice(0, 1);
+			}
+			handleEvents();
+		}
+	}, 100);
 
 })();
-

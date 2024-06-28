@@ -7,6 +7,7 @@ export type Update = {
 		type: string;
 		data?: any;
 	};
+	timestamp: number;
 }
 
 export function gameUpdate(socket: Socket, [room, data]) {

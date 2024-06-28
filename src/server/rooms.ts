@@ -58,16 +58,18 @@ export function joinRoom(socket: any, room: string, username: string) {
 	});
 
 	let pnum = findMissingNumber(nums);
-	connections.push({ // Push new connection
+	let newConnection = { // Push new connection
 		id: socket.id,
 		num: pnum,
 		username: username,
 		host: connections.length == 0
-	});
+	};
+	connections.push(newConnection);
 
 	// Connect to room and send/recieve updates
 	socket.join(room);
-	io.to(room).emit("connectionAdded", roomData.connections);
+	io.to(room).emit("connectionAdded", newConnection);
+	io.to(room).emit("playerList", roomData.connections);
 	io.to(room).emit("bagUpdate", roomData.bag);
 };
 
