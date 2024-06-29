@@ -7,6 +7,8 @@ import { Connection } from "../server/rooms";
 import { Update } from "../server/game";
 import { Events } from "matter-js";
 
+import { chromatic } from "./shaders";
+
 const room = new URLSearchParams(window.location.search).get("room");
 let username = sessionStorage.getItem("username");
 if (!room)
@@ -27,6 +29,27 @@ const connections: Map<string, [Connection, Board]> = new Map();
 
 	const displayBoard = new BoardDisplay();
 	app.stage.addChild(displayBoard.container);
+
+	const filter = new PIXI.Filter({
+		glProgram: new PIXI.GlProgram({
+			fragment: chromatic.fragment,
+			vertex: chromatic.vertex,
+		}),
+		resources: {
+            uniforms: {
+                uResolution: { value: [app.stage.width, app.screen.height], type: 'vec2<f32>'},
+                uRed: { value: [3, 0], type: 'vec2<f32>'},
+                uGreen: { value: [0, 0], type: 'vec2<f32>'},
+                uBlue: { value: [-6, 0], type: 'vec2<f32>'},
+                uPower: { value: 2.0, type: 'f32'},
+                uOffset: { value: 0.4, type: 'f32'},
+                uBase: { value: 0.1, type: 'f32'},
+            },
+        },
+	});
+
+	app.stage.filterArea = app.screen;
+	app.stage.filters = [new PIXI.BlurFilter({strength: 0}), filter];
 
 	let other_boards: Board[] = [];
 
@@ -106,6 +129,8 @@ const connections: Map<string, [Connection, Board]> = new Map();
 	});
 
 	app.ticker.add((time) => {
+		filter.resources.uniforms.uniforms.uResolution = [app.stage.width, app.stage.height];
+
 		if (myBoard)
 			myBoard.draw();
 		other_boards.forEach(board => {
