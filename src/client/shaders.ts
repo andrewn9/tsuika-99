@@ -1,6 +1,10 @@
 export const chromatic = {
     fragment: `
+#version 300 es
+
 precision mediump float;
+
+out vec4 fragColor;
 
 in vec2 vTextureCoord;
 in vec2 vScreenCoord;
@@ -18,15 +22,19 @@ uniform float uBase;
 void main(void) {
   float factor = max(pow(length(vScreenCoord * 2.0 - vec2(1.0, 1.0)), uPower) - uOffset, 0.0) + uBase;
 
-  gl_FragColor.r = texture2D(uSampler, vTextureCoord + uRed * factor / uResolution).r;
-  gl_FragColor.g = texture2D(uSampler, vTextureCoord + uGreen * factor / uResolution).g;
-  gl_FragColor.b = texture2D(uSampler, vTextureCoord + uBlue * factor / uResolution).b;
-  gl_FragColor.a = texture2D(uSampler, vTextureCoord).a;
+    fragColor = vec4(0.0);
 
-  // gl_FragColor = vec4(vScreenCoord.x, vScreenCoord.y, 0, 0);
+  fragColor.r = texture(uSampler, vTextureCoord + uRed * factor / uResolution).r;
+  fragColor.g = texture(uSampler, vTextureCoord + uGreen * factor / uResolution).g;
+  fragColor.b = texture(uSampler, vTextureCoord + uBlue * factor / uResolution).b;
+  fragColor.a = texture(uSampler, vTextureCoord).a;
+
+  // fragColor = vec4(vScreenCoord.x, vScreenCoord.y, 0, 0);
 }
     `,
     vertex: `
+#version 300 es
+
 in vec2 aPosition;
 out vec2 vTextureCoord;
 

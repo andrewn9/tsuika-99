@@ -6,8 +6,9 @@ import { Board } from "./board";
 import { Connection } from "../server/rooms";
 import { Update } from "../server/game";
 import { Events } from "matter-js";
+import { BloomFilter } from "pixi-filters";
 
-import { chromatic } from "./shaders";
+import * as Shaders from "./shaders";
 
 const room = new URLSearchParams(window.location.search).get("room");
 let username = sessionStorage.getItem("username");
@@ -18,6 +19,8 @@ if (!username)
 
 const socket = io();
 socket.emit("joinRoom", { room, username });
+
+
 
 const app = new PIXI.Application();
 const connections: Map<string, [Connection, Board]> = new Map();
@@ -30,10 +33,10 @@ const connections: Map<string, [Connection, Board]> = new Map();
 	const displayBoard = new BoardDisplay();
 	app.stage.addChild(displayBoard.container);
 
-	const filter = new PIXI.Filter({
+	const chromatic = new PIXI.Filter({
 		glProgram: new PIXI.GlProgram({
-			fragment: chromatic.fragment,
-			vertex: chromatic.vertex,
+			fragment: Shaders.chromatic.fragment,
+			vertex: Shaders.chromatic.vertex,
 		}),
 		resources: {
             uniforms: {
@@ -49,7 +52,7 @@ const connections: Map<string, [Connection, Board]> = new Map();
 	});
 
 	app.stage.filterArea = app.screen;
-	app.stage.filters = [new PIXI.BlurFilter({strength: 0}), filter];
+	app.stage.filters = [new PIXI.BlurFilter({strength: 0}), chromatic, new BloomFilter({strength: 6})];
 
 	let other_boards: Board[] = [];
 
@@ -129,7 +132,7 @@ const connections: Map<string, [Connection, Board]> = new Map();
 	});
 
 	app.ticker.add((time) => {
-		filter.resources.uniforms.uniforms.uResolution = [app.stage.width, app.stage.height];
+		chromatic.resources.uniforms.uniforms.uResolution = [app.stage.width, app.stage.height];
 
 		if (myBoard)
 			myBoard.draw();
