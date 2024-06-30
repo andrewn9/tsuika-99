@@ -29,7 +29,7 @@ export class Fruit {
 	static createGraphic(type: FruitType, x: number, y: number, circleRadius: number): PIXI.Graphics {
 		let graphic = new PIXI.Graphics();
 		graphic.circle(x, y, circleRadius);
-		graphic.fill(0xffffff);
+		graphic.fill(Math.round(Math.random() * 16777215));
 		return graphic;
 	}
 	

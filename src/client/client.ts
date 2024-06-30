@@ -6,6 +6,7 @@ import { Board } from "./board";
 import { Connection } from "../server/rooms";
 import { Update } from "../server/game";
 import { Events } from "matter-js";
+import { BloomFilter } from "pixi-filters";
 
 import * as Shaders from "./shaders";
 
@@ -50,22 +51,8 @@ const connections: Map<string, [Connection, Board]> = new Map();
         },
 	});
 
-	const bloom = new PIXI.Filter({
-		glProgram: new PIXI.GlProgram({
-			fragment: Shaders.bloom.fragment,
-			vertex: Shaders.bloom.vertex,
-		}),
-		resources: {
-            uniforms: {
-                bloom_spread: { value: 0.5, type: 'f32'},
-                bloom_intensity: { value: 2, type: 'f32'},
-            },
-        },
-	});
-
 	app.stage.filterArea = app.screen;
-	app.stage.filters = [new PIXI.BlurFilter({strength: 0}), chromatic, new PIXI.BlurFilter({strength: 0}), bloom];
-	// app.stage.filters = [new PIXI.BlurFilter({strength: 10.0}), chromatic, bloom];
+	app.stage.filters = [new PIXI.BlurFilter({strength: 0}), chromatic, new BloomFilter({strength: 6})];
 
 	let other_boards: Board[] = [];
 
