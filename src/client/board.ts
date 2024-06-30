@@ -1,9 +1,10 @@
 import * as PIXI from 'pixi.js';
 import { Engine, Runner, Render, Mouse, MouseConstraint, Composite, IChamferableBodyDefinition, Bodies, Body } from "matter-js";
-import { appHeight, appWidth, boxHeight, boxWidth, lerp } from "./config";
+import { appHeight, appWidth, boxHeight, boxWidth, clamp, lerp } from "./config";
 import { Fruit, FruitType } from "./fruit";
 import { BoardDisplay, DisplayMode, LevelOfDetail } from './boardlayout';
 import { Connection } from '../server/rooms';
+import { bodyMap } from './client';
 
 export class Board {
 	connection: Connection;
@@ -18,6 +19,7 @@ export class Board {
 
 	engine: Engine;
 	runner: Runner;
+
 	container: PIXI.Container;
 	nameplate: PIXI.Text;
 	boardDisplay: BoardDisplay;
@@ -43,13 +45,12 @@ export class Board {
 		if (!this.container) { return; }
 		let board = new PIXI.Graphics();
 		
-		board.stroke({ width: 20, color: 0xffffff});
+		board.stroke({ alignment: 0, width: 5, color: 0xffffff, });
 		board.lineTo(0, boxHeight);
 		board.lineTo(boxWidth, boxHeight);
 		board.lineTo(boxWidth, 0);
 		board.stroke();
 
-		
 		board.fillStyle = {
 			color: 0x000000,
 			alpha: 0.9*255
@@ -151,13 +152,17 @@ export class Board {
 	}
 
 	spawnFruit() {
-		this.fruits.push(Fruit.create(Math.floor(Math.random() * 5), this, 50 + Math.floor(Math.random() * boxWidth - 50), 0));
+		let fruit = Fruit.create(Math.floor(Math.random() * 5), this, 50 + Math.floor(Math.random() * boxWidth - 50), 0);
+		if (this.client) {
+			bodyMap.set(fruit.body, fruit);
+		}
+		this.fruits.push(fruit);
 	}
 
 	drawFruits() {
 		this.fruits.forEach(fruit => {
-			fruit.graphic.position.x = fruit.body.position.x
-			fruit.graphic.position.y = fruit.body.position.y;
+			fruit.graphic.position.x = clamp(fruit.body.position.x, 0 + fruit.graphic.width/2, boxWidth - fruit.graphic.width/2);
+			fruit.graphic.position.y = (fruit.body.position.y < boxHeight - fruit.graphic.width/2) ? fruit.body.position.y : (boxHeight - fruit.graphic.width/2);
 		});
 	}
 
@@ -234,7 +239,6 @@ export class Board {
 		for (let fruit of this.fruits) {
 			packets.push(fruit.serialize());
 		}
-		console.log(packets);
 		return packets;
 	}
 	

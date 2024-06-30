@@ -24,11 +24,9 @@ export class Fruit {
 	static createGraphic(type: FruitType, x: number, y: number, circleRadius: number): PIXI.Graphics {
 		let graphic = new PIXI.Graphics();
 		graphic.circle(x, y, circleRadius);
-		let color = fruitColor[type];
-		if (!color) {
-			color = new PIXI.Color();
-		}
-		graphic.fill(color);
+		let color = fruitColor[type] || new PIXI.Color();
+		graphic.fill(0x000);
+		graphic.stroke({ width: 5, color });
 		return graphic;
 	}
 
@@ -63,15 +61,22 @@ export class Fruit {
 		}
 
 		if (board.simulationDetail == LevelOfDetail.PHYSICS || board.simulationDetail == LevelOfDetail.PHYSICS_WITH_HUD) {
-			fruit.body = Bodies.circle(x, y, fruitRadii[type], { isStatic: false });
+			fruit.body = Bodies.circle(x, y, fruitRadii[type], { slop: 0.01, isStatic: false });
 			Composite.add(board.engine.world, fruit.body);
 		}
+
+		// fruit.graphic.eventMode = 'static';
+		// fruit.graphic.on('pointerdown', () => {
+		// 	console.log(fruit);
+		// });
 
 		return fruit;
 	}
 
 	remove() {
 		this.board.container.removeChild(this.graphic);
+		let index = this.board.fruits.findIndex((element) => element === this);
+		this.board.fruits.splice(index, 1);
 		if (this.body && this.board.engine) {
 			Composite.remove(this.board.engine.world, this.body);
 		}
