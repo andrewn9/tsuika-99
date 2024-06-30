@@ -7,7 +7,7 @@ import { Connection } from "../server/rooms";
 import { Update } from "../server/game";
 import { Events } from "matter-js";
 
-import { chromatic } from "./shaders";
+import * as Shaders from "./shaders";
 
 const room = new URLSearchParams(window.location.search).get("room");
 let username = sessionStorage.getItem("username");
@@ -18,6 +18,8 @@ if (!username)
 
 const socket = io();
 socket.emit("joinRoom", { room, username });
+
+
 
 const app = new PIXI.Application();
 const connections: Map<string, [Connection, Board]> = new Map();
@@ -30,10 +32,10 @@ const connections: Map<string, [Connection, Board]> = new Map();
 	const displayBoard = new BoardDisplay();
 	app.stage.addChild(displayBoard.container);
 
-	const filter = new PIXI.Filter({
+	const chromatic = new PIXI.Filter({
 		glProgram: new PIXI.GlProgram({
-			fragment: chromatic.fragment,
-			vertex: chromatic.vertex,
+			fragment: Shaders.chromatic.fragment,
+			vertex: Shaders.chromatic.vertex,
 		}),
 		resources: {
             uniforms: {
@@ -48,8 +50,22 @@ const connections: Map<string, [Connection, Board]> = new Map();
         },
 	});
 
+	const bloom = new PIXI.Filter({
+		glProgram: new PIXI.GlProgram({
+			fragment: Shaders.bloom.fragment,
+			vertex: Shaders.bloom.vertex,
+		}),
+		resources: {
+            uniforms: {
+                bloom_spread: { value: 0.5, type: 'f32'},
+                bloom_intensity: { value: 2, type: 'f32'},
+            },
+        },
+	});
+
 	app.stage.filterArea = app.screen;
-	app.stage.filters = [new PIXI.BlurFilter({strength: 0}), filter];
+	app.stage.filters = [new PIXI.BlurFilter({strength: 0}), chromatic, new PIXI.BlurFilter({strength: 0}), bloom];
+	// app.stage.filters = [new PIXI.BlurFilter({strength: 10.0}), chromatic, bloom];
 
 	let other_boards: Board[] = [];
 
@@ -129,7 +145,7 @@ const connections: Map<string, [Connection, Board]> = new Map();
 	});
 
 	app.ticker.add((time) => {
-		filter.resources.uniforms.uniforms.uResolution = [app.stage.width, app.stage.height];
+		chromatic.resources.uniforms.uniforms.uResolution = [app.stage.width, app.stage.height];
 
 		if (myBoard)
 			myBoard.draw();
