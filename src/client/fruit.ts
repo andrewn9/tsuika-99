@@ -5,17 +5,12 @@ import { Board } from "./board";
 import { Body } from "matter-js";
 import { LevelOfDetail } from "./boardlayout";
 
-function getRadius(type: FruitType) {
-	let radius = (Math.pow(type, 1.36) * 5.45 + 36.52) / 2;
-	return radius;
-}
-
 interface FruitDefinition {
 	type: FruitType;
-	position: {x: number, y: number};
+	position: { x: number, y: number };
 	angle: number;
 	physics?: {
-		velocity: {x: number, y: number};
+		velocity: { x: number, y: number };
 		angularVelocity: number;
 	};
 }
@@ -29,14 +24,18 @@ export class Fruit {
 	static createGraphic(type: FruitType, x: number, y: number, circleRadius: number): PIXI.Graphics {
 		let graphic = new PIXI.Graphics();
 		graphic.circle(x, y, circleRadius);
-		graphic.fill(0xffffff);
+		let color = fruitColor[type];
+		if (!color) {
+			color = new PIXI.Color();
+		}
+		graphic.fill(color);
 		return graphic;
 	}
-	
+
 	static createFromJSON(jSon: string, board: Board) {
 		let def: FruitDefinition = JSON.parse(jSon);
 		let fruit = this.create(def.type, board, def.position.x, def.position.y, def.angle);
-		
+
 		if (def.physics) {
 			Body.update(fruit.body, 16.666, 1, 0);
 			for (const key in def.physics) {
@@ -51,12 +50,12 @@ export class Fruit {
 		let fruit = new Fruit();
 		fruit.properties = {
 			type: type,
-			position: {x: x, y: y},
-			angle: angle ? angle: 0
+			position: { x: x, y: y },
+			angle: angle ? angle : 0
 		};
 
 		fruit.board = board;
-		fruit.graphic = this.createGraphic(type, 0, 0, getRadius(type));
+		fruit.graphic = this.createGraphic(type, 0, 0, fruitRadii[type]);
 		fruit.board.container.addChild(fruit.graphic);
 
 		if (angle) {
@@ -64,7 +63,7 @@ export class Fruit {
 		}
 
 		if (board.simulationDetail == LevelOfDetail.PHYSICS || board.simulationDetail == LevelOfDetail.PHYSICS_WITH_HUD) {
-			fruit.body = Bodies.circle(x, y, getRadius(type), { isStatic: false });
+			fruit.body = Bodies.circle(x, y, fruitRadii[type], { isStatic: false });
 			Composite.add(board.engine.world, fruit.body);
 		}
 
@@ -80,12 +79,12 @@ export class Fruit {
 
 	serialize() {
 		this.properties.angle = this.body.angle;
-		this.properties.position = {x: this.body.position.x, y: this.body.position.y};
+		this.properties.position = { x: this.body.position.x, y: this.body.position.y };
 
 		this.properties.physics = {
 			velocity: this.body.velocity,
 			angularVelocity: this.body.angularVelocity
-			
+
 		};
 
 		return JSON.stringify(this.properties);
@@ -104,6 +103,34 @@ export enum FruitType {
 	PINEAPPLE,
 	MELON,
 	WATERMELON
+}
+
+const fruitRadii = {
+	[FruitType.CHERRY]: 25,
+	[FruitType.STRAWBERRY]: 35,
+	[FruitType.GRAPES]: 50,
+	[FruitType.DEKOPON]: 55,
+	[FruitType.PERSIMMON]: 65,
+	[FruitType.APPLE]: 80,
+	[FruitType.PEAR]: 100,
+	[FruitType.PEACH]: 120,
+	[FruitType.PINEAPPLE]: 140,
+	[FruitType.MELON]: 170,
+	[FruitType.WATERMELON]: 200
+}
+
+const fruitColor = {
+	[FruitType.CHERRY]: new PIXI.Color("#b30202"),
+	[FruitType.STRAWBERRY]: new PIXI.Color("#e85151"),
+	[FruitType.GRAPES]: new PIXI.Color("#a04cd9"),
+	[FruitType.DEKOPON]: new PIXI.Color("#f5ab2c"),
+	[FruitType.PERSIMMON]: new PIXI.Color("eb7507"),
+	[FruitType.APPLE]: new PIXI.Color("#f50800"),
+	[FruitType.PEAR]: new PIXI.Color("#f9ff8a"),
+	[FruitType.PEACH]: new PIXI.Color("#ffa1d6"),
+	[FruitType.PINEAPPLE]: new PIXI.Color("#faf200"),
+	[FruitType.MELON]: new PIXI.Color("#85ff47"),
+	[FruitType.WATERMELON]: new PIXI.Color("#37a102"),
 }
 
 export const pointValues: number[] = [

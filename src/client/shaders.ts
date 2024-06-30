@@ -59,3 +59,58 @@ void main(void)
 }
     `
 }
+
+export const bloom = {
+	fragment: `
+	#version 330 core
+	out vec4 FragColor;
+	  
+	in vec2 aPosition;
+	
+	uniform sampler2D scene;
+	uniform sampler2D bloomBlur;
+	uniform float exposure;
+	
+	void main()
+	{             
+		const float gamma = 2.2;
+		vec3 hdrColor = texture(scene, aPosition).rgb;      
+		vec3 bloomColor = texture(bloomBlur, aPosition).rgb;
+		hdrColor += bloomColor; // additive blending
+		// tone mapping
+		vec3 result = vec3(1.0) - exp(-hdrColor * exposure);
+		// also gamma correct while we're at it       
+		result = pow(result, vec3(1.0 / gamma));
+		FragColor = vec4(result, 1.0);
+	}  
+	`,
+	vertex: `
+	in vec2 aPosition;
+	out vec2 vTextureCoord;
+
+	uniform vec4 uInputSize;
+	uniform vec4 uOutputFrame;
+	uniform vec4 uOutputTexture;
+
+	vec4 filterVertexPosition( void )
+	{
+		vec2 position = aPosition * uOutputFrame.zw + uOutputFrame.xy;
+		
+		position.x = position.x * (2.0 / uOutputTexture.x) - 1.0;
+		position.y = position.y * (2.0*uOutputTexture.z / uOutputTexture.y) - uOutputTexture.z;
+
+		return vec4(position, 0.0, 1.0);
+	}
+
+	vec2 filterTextureCoord( void )
+	{
+		return aPosition * (uOutputFrame.zw * uInputSize.zw);
+	}
+
+	void main(void)
+	{
+		gl_Position = filterVertexPosition();
+		vTextureCoord = filterTextureCoord();
+	}
+	`
+}

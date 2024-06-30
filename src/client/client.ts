@@ -42,14 +42,14 @@ const connections: Map<string, [Connection, Board]> = new Map();
                 uGreen: { value: [0, 0], type: 'vec2<f32>'},
                 uBlue: { value: [-6, 0], type: 'vec2<f32>'},
                 uPower: { value: 2.0, type: 'f32'},
-                uOffset: { value: 0.4, type: 'f32'},
-                uBase: { value: 0.1, type: 'f32'},
+                uOffset: { value: 0.8, type: 'f32'},
+                uBase: { value: 0.01, type: 'f32'},
             },
         },
 	});
 
 	app.stage.filterArea = app.screen;
-	app.stage.filters = [new PIXI.BlurFilter({strength: 0}), filter];
+	app.stage.filters = [new PIXI.BlurFilter({strength: 0}),filter];
 
 	let other_boards: Board[] = [];
 
