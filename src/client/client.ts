@@ -26,7 +26,7 @@ const connections: Map<string, [Connection, Board]> = new Map();
 export const bodyMap: Map<Body, Fruit> = new Map<Body, Fruit>();
 
 (async () => {
-	await app.init({ antialias: true, backgroundAlpha: 0, width: appWidth, height: appHeight });
+	await app.init({ antialias: true, backgroundAlpha: 0, width: appWidth, height: appHeight, resizeTo: window});
 	document.body.appendChild(app.canvas);
 	app.canvas.setAttribute("id", "render");
 
@@ -277,5 +277,4 @@ export const bodyMap: Map<Body, Fruit> = new Map<Body, Fruit>();
 			handleEvents();
 		}
 	}, 100);
-
 })();

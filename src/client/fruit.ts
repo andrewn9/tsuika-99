@@ -23,7 +23,7 @@ export class Fruit {
 
 	static createGraphic(type: FruitType, x: number, y: number, circleRadius: number): PIXI.Graphics {
 		let graphic = new PIXI.Graphics();
-		graphic.circle(x, y, circleRadius);
+		graphic.circle(x, y, circleRadius - 5);
 		let color = fruitColor[type] || new PIXI.Color();
 		graphic.fill(0x000);
 		graphic.stroke({ width: 5, color });
