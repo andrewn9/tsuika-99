@@ -43,6 +43,7 @@ export class Board {
 
 	initBoard() {
 		if (!this.container) { return; }
+
 		let board = new PIXI.Graphics();
 		
 		board.stroke({ alignment: 0, width: 5, color: 0xffffff, });
@@ -167,51 +168,41 @@ export class Board {
 	}
 
 	draw(dt? : number) {
-		if (this.focused) {
-			this.container.position = {x: lerp(this.container.position.x, this.transform.x, 0.5), y: lerp(this.container.position.y, this.transform.y, 0.5)};
-
-			if (this.boardDisplay.mode == DisplayMode.DUEL && this.boardDisplay.boards.length > 0) {
-				this.transform = {x: appWidth/4 - boxWidth/2, y: appHeight/2 - boxHeight/2, scale: 1};
-			} else {
-				this.transform = {x: appWidth/2 - boxWidth/2, y: appHeight/2 - boxHeight/2, scale: 1};
-			}
-		} else {
-			this.container.position = {x: lerp(this.container.position.x, this.transform.x, 0.25), y: lerp(this.container.position.y, this.transform.y, 0.25)};
-			this.container.scale.set(lerp(this.container.scale._x, this.transform.scale, 0.25));
-
-			if (this.dead) {
-				this.container.alpha = lerp(this.container.alpha, 0, 0.5);
-				if (this.container.alpha <= 0.1) {
-					this.container.visible = false;
-				}
-			}
-
-			if (this.boardDisplay.mode == DisplayMode.GALLERY) {
-				if (this.transform.rowIndex % 2 == 0) {
-					this.transform.x += 0.5 * dt;
-				} else {
-					this.transform.x -= 0.5 * dt;
-				}
-
-				if (this.container.position.y > appHeight / 2) {
-					this.container.position.y += 5*Math.cos((2*Math.PI)/appWidth * this.container.position.x);
-				} else {
-					this.container.position.y -= 5*Math.cos((2*Math.PI)/appWidth * this.container.position.x);
-				}
-
-				if (this.container.position.x > appWidth + Math.floor(this.boardDisplay.boards.length / 4) * this.container.width - this.container.width*4.5) {
-					this.container.position.x = -this.container.width;
-					this.transform.x = this.container.position.x;
-				}
-				if (this.container.position.x < -(appWidth + Math.floor(this.boardDisplay.boards.length / 4) * this.container.width - this.container.width*4.5)) {
-					this.container.position.x = this.container.width;
-					this.transform.x = this.container.position.x;
-				}
+		this.container.position = {x: lerp(this.container.position.x, this.transform.x, 0.25), y: lerp(this.container.position.y, this.transform.y, 0.25)};
+		this.container.scale.set(lerp(this.container.scale._x, this.transform.scale, 0.25));
+		if (this.dead) {
+			this.container.alpha = lerp(this.container.alpha, 0, 0.5);
+			if (this.container.alpha <= 0.1) {
+				this.container.visible = false;
 			}
 		}
-		if (this.simulationDetail == LevelOfDetail.PHYSICS || this.simulationDetail == LevelOfDetail.PHYSICS_WITH_HUD ) {
-			this.drawFruits();
-		}
+
+		// if (this.boardDisplay.mode == DisplayMode.GALLERY) {
+		// 	if (this.transform.rowIndex % 2 == 0) {
+		// 		this.transform.x += 0.5 * dt;
+		// 	} else {
+		// 		this.transform.x -= 0.5 * dt;
+		// 	}
+
+		// 	if (this.container.position.y > appHeight / 2) {
+		// 		this.container.position.y += 5*Math.cos((2*Math.PI)/appWidth * this.container.position.x);
+		// 	} else {
+		// 		this.container.position.y -= 5*Math.cos((2*Math.PI)/appWidth * this.container.position.x);
+		// 	}
+
+		// 	if (this.container.position.x > appWidth + Math.floor(this.boardDisplay.boards.length / 4) * this.container.width - this.container.width*4.5) {
+		// 		this.container.position.x = -this.container.width;
+		// 		this.transform.x = this.container.position.x;
+		// 	}
+		// 	if (this.container.position.x < -(appWidth + Math.floor(this.boardDisplay.boards.length / 4) * this.container.width - this.container.width*4.5)) {
+		// 		this.container.position.x = this.container.width;
+		// 		this.transform.x = this.container.position.x;
+		// 	}
+		// }
+	
+	if (this.simulationDetail == LevelOfDetail.PHYSICS || this.simulationDetail == LevelOfDetail.PHYSICS_WITH_HUD ) {
+		this.drawFruits();
+	}
 	}
 	
 	clear () {
@@ -246,7 +237,7 @@ export class Board {
 		this.boardDisplay = boardDisplay;
 		this.id = Math.floor(1000*Math.random());
 		this.client = client;
-		this.transform = {x: 0, y: 0, scale: 0};
+		this.transform = {x: 0, y: 0, scale: 1};
 		if (simulationDetail)
 			this.simulationDetail = simulationDetail;
 		else if (boardDisplay) {
@@ -269,6 +260,7 @@ export class Board {
 		}
 
 		this.container = new PIXI.Container();
-		this.container.scale.set(1,1);
+		this.container.pivot.set(boxWidth/2, boxHeight/2);
+		this.container.scale.set(0,0);
 	}
 }

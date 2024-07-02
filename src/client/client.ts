@@ -30,8 +30,11 @@ export const bodyMap: Map<Body, Fruit> = new Map<Body, Fruit>();
 	document.body.appendChild(app.canvas);
 	app.canvas.setAttribute("id", "render");
 
+	const display = new PIXI.Container();
+	app.stage.addChild(display);
+
 	const displayBoard = new BoardDisplay();
-	app.stage.addChild(displayBoard.container);
+	display.addChild(displayBoard.container);
 
 	const chromatic = new PIXI.Filter({
 		glProgram: new PIXI.GlProgram({
@@ -85,10 +88,11 @@ export const bodyMap: Map<Body, Fruit> = new Map<Body, Fruit>();
 			if (!myBoard) {
 				myBoard = new Board(displayBoard, LevelOfDetail.PHYSICS_WITH_HUD, true);
 				myBoard.connection = myConnection;
-				myBoard.focused = true;
 				myBoard.client = true;
-				myBoard.transform = {x: appWidth/2 - boxWidth/2, y: appHeight/2 - boxHeight/2, scale: 1};
-				app.stage.addChild(myBoard.container);
+				displayBoard.addBoard(myBoard);
+				displayBoard.focused = myBoard;
+
+				display.addChild(myBoard.container);
 				myBoard.initBoard();
 				myBoard.initEngine();
 				myBoard.startSim();
@@ -277,4 +281,13 @@ export const bodyMap: Map<Body, Fruit> = new Map<Body, Fruit>();
 			handleEvents();
 		}
 	}, 100);
+
+	function resize() {
+		display.scale = Math.min(window.innerWidth / appWidth, window.innerHeight / appHeight);
+		display.position.x = window.innerWidth/2;
+		display.position.y = window.innerHeight/2;
+	}
+
+	resize();
+	window.addEventListener("resize", resize);
 })();
