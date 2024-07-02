@@ -73,60 +73,47 @@ export class BoardDisplay {
 			height: 0
 		};
 
-		let scaleFactor;
-		let margin = 10;
+		let scaleFactor = 1;
+		let margin = 100;
 		switch (this.mode) {
 			case DisplayMode.GALLERY:
-				margin = 70;
-				bounds.height = appHeight * 0.8;
-				scaleFactor = (appHeight / 4 - 2 * margin) / (boxHeight);
-				bounds.y = appHeight / 2 - boxHeight * scaleFactor * 2 - margin;
 				break;
 			case DisplayMode.TWOSIDES:
-				scaleFactor = 1 / 6;
-				bounds.width = appWidth * 0.2;
-				bounds.height = appHeight * 0.5;
-				bounds.x = margin * 5;
 
 				break;
 			case DisplayMode.ONESIDE:
-				if (this.boards.length < 5) {
-					scaleFactor = 1/3;
-				} else if (this.boards.length < 15) {
-					scaleFactor = 1/5;
-				} else {
-					scaleFactor = 1/6;
-				}
-				bounds.width = appWidth * 0.2;
-				bounds.height = appHeight * 0.5;
-				bounds.x = appWidth / 2 + boxWidth / 2 + margin * 5;
+				let view_width = boxWidth;
+				let view_height = boxHeight;
 
-				let bwidth = boxWidth * scaleFactor;
-				let bheight = boxHeight * scaleFactor;
+				let grid = this.boards.filter(board => board !== this.focused);
 
-				let columns = Math.ceil(bounds.width / bwidth);
-				let rows = Math.ceil(bounds.height / bheight);
+				let k = boxHeight/boxWidth;
+				let columns = Math.floor(Math.sqrt(k*grid.length));
+				let rows = Math.ceil(grid.length/columns);
 
-				let boards: Board[] = this.boards.slice();
-				
-				if (this.focused !== null) {
-					this.focused.transform.x = 0;
-					this.focused.transform.y = 0;
-					this.focused.transform.scale = 1;
+				console.log("rows:" + rows);
+				console.log("columns:" + columns);
 
-					boards.splice(boards.indexOf(this.focused), 1);
-				}
+				scaleFactor = Math.min(view_height / (rows * boxHeight), view_width / (columns * boxWidth));
+				// scaleFactor = view_height / (rows * boxHeight);
 
-				for (let i = 0; i < boards.length; i++) {
-					let board = boards[i];
-					
+				let scaledWidth = boxWidth * scaleFactor;
+				let scaledHeight = boxHeight * scaleFactor;
+
+				for (let i = 0; i < grid.length; i++) {
+					let board = grid[i];
+
+					const colIndex = i % columns + 0.5;
+					const rowIndex = Math.floor(i / columns) + 0.5;
+
+					board.transform.x = (colIndex - columns / 2) * scaledWidth + (boxWidth + columns * scaledWidth)/2;
+					board.transform.y = (rowIndex - rows / 2) * scaledHeight;
+
 					board.transform.scale = scaleFactor;
-
-					const colIndex = i % columns;
-					const rowIndex = Math.floor(i / columns);
-					board.transform.x = colIndex * (bwidth + margin) + boxWidth / 2 + bwidth / 2 + margin;
-					board.transform.y = rowIndex * (bheight + margin) - boxWidth / 2 + bheight / 2;
 				}
+
+				this.focused.transform.x = 0;
+				this.focused.transform.scale = 1;
 
 				break;
 			case DisplayMode.DUEL:
