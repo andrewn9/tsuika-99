@@ -20,16 +20,20 @@ export class BoardDisplay {
 	mode: DisplayMode = DisplayMode.DUEL;
 	container: PIXI.Container;
 
+	focused: Board;
+
 	constructor() {
 		this.container = new PIXI.Container();
 	}
 
 	getMode() {
+		console.log(this.boards.length);
+
 		if (this.boards.length > 48) {
 			return DisplayMode.GALLERY;
 		} else if (this.boards.length > 24) {
 			return DisplayMode.TWOSIDES;
-		} else if (this.boards.length > 1) {
+		} else if (this.boards.length > 2) {
 			return DisplayMode.ONESIDE;
 		} else {
 			return DisplayMode.DUEL;
@@ -69,104 +73,113 @@ export class BoardDisplay {
 			height: 0
 		};
 
-		let scaleFactor;
-		let margin = 5;
+		let scaleFactor = 1;
+		let margin = 100;
 		switch (this.mode) {
 			case DisplayMode.GALLERY:
-				margin = 70;
-				bounds.height = appHeight * 0.8;
-				scaleFactor = (appHeight / 4 - 2 * margin) / (boxHeight);
-				bounds.y = appHeight / 2 - boxHeight * scaleFactor * 2 - margin;
 				break;
 			case DisplayMode.TWOSIDES:
-				scaleFactor = 1 / 6;
-				margin = 10;
-				bounds.width = appWidth * 0.2;
-				bounds.height = appHeight * 0.5;
-				bounds.x = margin * 5;
-				bounds.y = appHeight / 2 - boxHeight / 2;
+
 				break;
 			case DisplayMode.ONESIDE:
-				if (this.boards.length < 5) {
-					scaleFactor = 1/3;
-				} else if (this.boards.length < 15) {
-					scaleFactor = 1/5;
-				} else {
-					scaleFactor = 1/6;
+				let view_width = boxWidth;
+				let view_height = boxHeight;
+
+				let grid = this.boards.filter(board => board !== this.focused);
+
+				let k = boxHeight/boxWidth;
+				let columns = Math.floor(Math.sqrt(k*grid.length));
+				let rows = Math.ceil(grid.length/columns);
+
+				console.log("rows:" + rows);
+				console.log("columns:" + columns);
+
+				scaleFactor = Math.min(view_height / (rows * boxHeight), view_width / (columns * boxWidth));
+				// scaleFactor = view_height / (rows * boxHeight);
+
+				let scaledWidth = boxWidth * scaleFactor;
+				let scaledHeight = boxHeight * scaleFactor;
+
+				for (let i = 0; i < grid.length; i++) {
+					let board = grid[i];
+
+					const colIndex = i % columns + 0.5;
+					const rowIndex = Math.floor(i / columns) + 0.5;
+
+					board.transform.x = (colIndex - columns / 2) * scaledWidth + (boxWidth + columns * scaledWidth)/2;
+					board.transform.y = (rowIndex - rows / 2) * scaledHeight;
+
+					board.transform.scale = scaleFactor;
 				}
-				margin = 10;
-				bounds.width = appWidth * 0.2;
-				bounds.height = appHeight * 0.5;
-				bounds.x = appWidth / 2 + boxWidth / 2 + margin * 5;
-				bounds.y = appHeight / 2 - boxHeight / 2;
+
+				this.focused.transform.x = 0;
+				this.focused.transform.scale = 1;
+
 				break;
 			case DisplayMode.DUEL:
 				scaleFactor = 1;
-				margin = 0;
-				bounds.width = boxWidth;
-				bounds.height = boxHeight;
-				bounds.x = 3 * appWidth / 4 - boxWidth / 2;
-				bounds.y = appHeight / 2 - boxHeight / 2;
+
+				for (let i = 0; i < this.boards.length; i++) {
+					let board = this.boards[i];
+
+					board.transform.x = (i + 0.5 - this.boards.length / 2) * (boxWidth + margin);
+				}
+
 				break;
 			default:
 				break;
 		}
 
-		this.boards.forEach(board => {
-			board.transform.scale = scaleFactor;
-		});
+		// let bwidth = boxWidth * scaleFactor;
+		// let bheight = boxHeight * scaleFactor;
 
-		let bwidth = boxWidth * scaleFactor;
-		let bheight = boxHeight * scaleFactor;
-
-		let columns = Math.ceil(bounds.width / bwidth);
-		let rows = Math.ceil(bounds.height / bheight);
+		// let columns = Math.ceil(bounds.width / bwidth);
+		// let rows = Math.ceil(bounds.height / bheight);
 
 
-		if (this.mode == DisplayMode.TWOSIDES) {
-			let mid = Math.floor(this.boards.length / 2);
+		// if (this.mode == DisplayMode.TWOSIDES) {
+		// 	let mid = Math.floor(this.boards.length / 2);
 
-			for (let i = 0; i < mid; i++) {
-				let board = this.boards[i];
-				const colIndex = i % columns;
-				const rowIndex = Math.floor(i / columns);
-				board.transform.x = bounds.x + colIndex * (bwidth + margin);
-				board.transform.y = bounds.y + rowIndex * (bheight + margin);
-			}
+		// 	for (let i = 0; i < mid; i++) {
+		// 		let board = this.boards[i];
+		// 		const colIndex = i % columns;
+		// 		const rowIndex = Math.floor(i / columns);
+		// 		board.transform.x = bounds.x + colIndex * (bwidth + margin);
+		// 		board.transform.y = bounds.y + rowIndex * (bheight + margin);
+		// 	}
 
-			bounds.x = appWidth / 2 + boxWidth / 2 + margin * 5;
+		// 	bounds.x = appWidth / 2 + boxWidth / 2 + margin * 5;
 
-			for (let i = mid; i < this.boards.length; i++) {
-				let board = this.boards[i];
-				const colIndex = i % columns;
-				const rowIndex = Math.floor((i - mid) / columns);
-				board.transform.x = bounds.x + colIndex * (bwidth + margin);
-				board.transform.y = bounds.y + rowIndex * (bheight + margin);
-			}
+		// 	for (let i = mid; i < this.boards.length; i++) {
+		// 		let board = this.boards[i];
+		// 		const colIndex = i % columns;
+		// 		const rowIndex = Math.floor((i - mid) / columns);
+		// 		board.transform.x = bounds.x + colIndex * (bwidth + margin);
+		// 		board.transform.y = bounds.y + rowIndex * (bheight + margin);
+		// 	}
 
-		} else if (this.mode == DisplayMode.GALLERY) {
-			for (let i = 0; i < this.boards.length; i++) {
-				let board = this.boards[i];
-				const rowIndex = i % 4;
-				const colIndex = Math.floor(i / 4);
-				board.transform.x = bounds.x + colIndex * (bwidth + margin);
+		// } else if (this.mode == DisplayMode.GALLERY) {
+		// 	for (let i = 0; i < this.boards.length; i++) {
+		// 		let board = this.boards[i];
+		// 		const rowIndex = i % 4;
+		// 		const colIndex = Math.floor(i / 4);
+		// 		board.transform.x = bounds.x + colIndex * (bwidth + margin);
 
-				if (rowIndex % 2 == 0) {
-					board.transform.x += 1 * bwidth / 2;
-					board.transform.rowIndex = rowIndex;
-				}
+		// 		if (rowIndex % 2 == 0) {
+		// 			board.transform.x += 1 * bwidth / 2;
+		// 			board.transform.rowIndex = rowIndex;
+		// 		}
 
-				board.transform.y = bounds.y + rowIndex * (bheight + margin);
-			}
-		} else {
-			for (let i = 0; i < this.boards.length; i++) {
-				let board = this.boards[i];
-				const colIndex = i % columns;
-				const rowIndex = Math.floor(i / columns);
-				board.transform.x = bounds.x + colIndex * (bwidth + margin);
-				board.transform.y = bounds.y + rowIndex * (bheight + margin);
-			}
-		}
-
+		// 		board.transform.y = bounds.y + rowIndex * (bheight + margin);
+		// 	}
+		// } else if (this.mode == DisplayMode.ONESIDE) {
+		// 	for (let i = 0; i < this.boards.length; i++) {
+		// 		let board = this.boards[i];
+		// 		const colIndex = i % columns;
+		// 		const rowIndex = Math.floor(i / columns);
+		// 		board.transform.x = bounds.x + colIndex * (bwidth + margin);
+		// 		board.transform.y = bounds.y + rowIndex * (bheight + margin);
+		// 	}
+		// }
 	}
 }
