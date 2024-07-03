@@ -27,11 +27,9 @@ export class BoardDisplay {
 	}
 
 	getMode() {
-		console.log(this.boards.length);
-
-		if (this.boards.length > 48) {
+		if (this.boards.length > 41) {
 			return DisplayMode.GALLERY;
-		} else if (this.boards.length > 24) {
+		} else if (this.boards.length > 21) {
 			return DisplayMode.TWOSIDES;
 		} else if (this.boards.length > 2) {
 			return DisplayMode.ONESIDE;
@@ -74,47 +72,40 @@ export class BoardDisplay {
 		};
 
 		let scaleFactor = 1;
+		let view_width, view_height, k, rows, columns;
+		let grid;
 		let margin = 100;
 		switch (this.mode) {
 			case DisplayMode.GALLERY:
+				view_width = boxWidth * 50;
+				view_height = boxHeight;
+				grid = this.boards.filter(board => board !== this.focused);
+				k = boxHeight/boxWidth; 
+				columns = Math.floor(Math.sqrt(k*grid.length));
+				rows = Math.ceil(grid.length/columns);
+
+				scaleFactor = view_height / (rows * boxHeight);
+
 				break;
 			case DisplayMode.TWOSIDES:
-
-				break;
-			case DisplayMode.ONESIDE:
-				let view_width = boxWidth;
-				let view_height = boxHeight;
-
-				let grid = this.boards.filter(board => board !== this.focused);
-
-				let k = boxHeight/boxWidth;
-				let columns = Math.floor(Math.sqrt(k*grid.length));
-				let rows = Math.ceil(grid.length/columns);
-
-				console.log("rows:" + rows);
-				console.log("columns:" + columns);
+				view_width = boxWidth;
+				view_height = boxHeight;
+				grid = this.boards.filter(board => board !== this.focused);
+				k = boxHeight/boxWidth;
+				columns = Math.floor(Math.sqrt(k*grid.length/2));
+				rows = Math.ceil(grid.length/2/columns);
 
 				scaleFactor = Math.min(view_height / (rows * boxHeight), view_width / (columns * boxWidth));
-				// scaleFactor = view_height / (rows * boxHeight);
+				break;
+			case DisplayMode.ONESIDE:
+				view_width = boxWidth;
+				view_height = boxHeight;
+				grid = this.boards.filter(board => board !== this.focused);
+				k = boxHeight/boxWidth;
+				columns = Math.floor(Math.sqrt(k*grid.length));
+				rows = Math.ceil(grid.length/columns);
 
-				let scaledWidth = boxWidth * scaleFactor;
-				let scaledHeight = boxHeight * scaleFactor;
-
-				for (let i = 0; i < grid.length; i++) {
-					let board = grid[i];
-
-					const colIndex = i % columns + 0.5;
-					const rowIndex = Math.floor(i / columns) + 0.5;
-
-					board.transform.x = (colIndex - columns / 2) * scaledWidth + (boxWidth + columns * scaledWidth)/2;
-					board.transform.y = (rowIndex - rows / 2) * scaledHeight;
-
-					board.transform.scale = scaleFactor;
-				}
-
-				this.focused.transform.x = 0;
-				this.focused.transform.scale = 1;
-
+				scaleFactor = Math.min(view_height / (rows * boxHeight), view_width / (columns * boxWidth));
 				break;
 			case DisplayMode.DUEL:
 				scaleFactor = 1;
@@ -124,11 +115,43 @@ export class BoardDisplay {
 
 					board.transform.x = (i + 0.5 - this.boards.length / 2) * (boxWidth + margin);
 				}
-
-				break;
+				return;
 			default:
 				break;
 		}
+
+		// scaleFactor = view_height / (rows * boxHeight);
+
+		console.log(this.mode);
+
+		let scaledWidth = boxWidth * scaleFactor;
+		let scaledHeight = boxHeight * scaleFactor;
+
+		for (let i = 0; i < grid.length; i++) {
+			let board = grid[i];
+
+			let colIndex = i % columns + 0.5;
+			let rowIndex = Math.floor(i / columns) + 0.5;
+			
+			if (this.mode === DisplayMode.TWOSIDES) {
+
+				if (rowIndex < rows) {
+					board.transform.x = (colIndex - columns / 2) * scaledWidth - (boxWidth + columns * scaledWidth)/2;
+				} else {
+					rowIndex-=rows;
+					board.transform.x = (colIndex - columns / 2) * scaledWidth + (boxWidth + columns * scaledWidth)/2;
+				}
+			} else {
+				board.transform.x = (colIndex - columns / 2) * scaledWidth + (boxWidth + columns * scaledWidth)/2;
+			}
+			
+			board.transform.y = (rowIndex - rows / 2) * scaledHeight;
+
+			board.transform.scale = scaleFactor;
+		}
+
+		this.focused.transform.x = 0;
+		this.focused.transform.scale = 1;
 
 		// let bwidth = boxWidth * scaleFactor;
 		// let bheight = boxHeight * scaleFactor;

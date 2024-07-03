@@ -207,8 +207,7 @@ export class Board {
 	
 	clear () {
 		while (this.fruits.length > 0) {
-			this.fruits.at(this.fruits.length-1).remove();
-			this.fruits.pop();
+			this.fruits.at(0).remove();
 		}
 	}
 

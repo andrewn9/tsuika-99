@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <head>
+	<link rel="stylesheet" href="base.css" />
 	<link rel="stylesheet" href="game.css" />
 	<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.2.0/svg.min.js"></script>
@@ -9,5 +10,19 @@
 
 <body>
 	<div class="overlay"></div>
+	<div class="menu">
+		<header class="topbar">
+			<button id="exit">EXIT</button>
+			<button id="copyroom">ROOM NAME</button>
+			<button id="settings">SETTINGS</button>
+		</header>
+		<div class="content-body">
+			<nav class="sidenav">Playerlist</nav>
+			<main class="content">Main</main>
+			<aside class="chat">Chat</aside>
+		</div>
+		<footer class="footer">Footer</footer>
+	</div>
 </body>
+
 </html>

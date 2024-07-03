@@ -4,19 +4,8 @@ body {
 	align-items: center;
 	height: 100vh;
 	margin: 0;
-	background-color: rgb(32,28,28);
+	background-color: #eee;
 	background-size: cover;
-}
-
-:root {
-	font-family: system-ui,Avenir,Helvetica,Arial,sans-serif;
-	line-height: 50%;
-	font-weight: 400;
-	color: #ffffffde;
-	font-synthesis: none;
-	text-rendering: optimizeLegibility;
-	-webkit-text-size-adjust: inherit;
-    white-space: nowrap;
 }
 
 h1 {
@@ -59,7 +48,7 @@ form input[type=submit] {
 }
 
 tr {
-    height: auto;
+    width: 100%;
     font: inherit;
 }
 
